@@ -1,3 +1,6 @@
+//TODO: expand to 4by4 field
+//TODO: cleanup (split in multiple files)
+
 /**
  * A Object, which holds the row and column of a new Move
  */
@@ -20,15 +23,20 @@ const WIN_SCREEN_MSG = document.getElementById("screen-msg");
 const RESET_BUTTON = document.getElementById("reset");
 const RESTART_BUTTON = document.getElementById("restart");
 const INFO_CONTAINER = document.getElementById("info");
+const SWITCH_BUTTON = document.getElementById("switch");
+
+let playerClass = PLAYER1_CLASS;
 
 //Messages
 const WINNING_MSG = (currentPlayer) => `Player ${currentPlayer} has won!`;
 const DRAW_MSG = `It's a Draw!`;
 const TURN_MSG = (currentPlayer) => `It's ${currentPlayer}'s turn!`;
+const PLAYER_IS = (playerClass) => `You are ${playerClass}!`;
 
+//Max depth of the minimax algo.
 const MAX_DEPTH = 12;
 
-//All possible winning conditions for each player.
+//All possible winning conditions for each playerClass.
 const WIN_COMBINATIONS = [
   [0, 1, 2],
   [3, 4, 5],
@@ -40,14 +48,16 @@ const WIN_COMBINATIONS = [
   [2, 4, 6],
 ];
 
+const amountOfRowAndCols = 3;
+
 //The board
-let gameState = [
-  ["", "", ""],
-  ["", "", ""],
-  ["", "", ""],
-];
+let gameState;
 
 let player1Turn;
+/**
+ * Set to undefined if the AI should be disabled. To enable the AI, set the value to either {@link PLAYER1_CLASS} or {@link PLAYER2_CLASS}.
+ */
+let aiSideClass = PLAYER2_CLASS;
 
 startGame();
 
@@ -64,9 +74,16 @@ function startGame() {
     cell.removeEventListener("click", onCellClickEvent);
     cell.addEventListener("click", onCellClickEvent, { once: true });
   });
+
+  gameState = [];
+
+  for (let size = 0; size < amountOfRowAndCols; size++) {
+    gameState.push([]);
+  }
+
   //Reset gameState
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
+  for (let i = 0; i < amountOfRowAndCols; i++) {
+    for (let j = 0; j < amountOfRowAndCols; j++) {
       gameState[i][j] = "";
     }
   }
@@ -75,12 +92,16 @@ function startGame() {
   RESET_BUTTON.addEventListener("click", onResetClickEvent);
   RESTART_BUTTON.removeEventListener("click", onResetClickEvent);
   RESTART_BUTTON.addEventListener("click", onResetClickEvent);
+  SWITCH_BUTTON.removeEventListener("click", onSwitchClickEvent);
+  SWITCH_BUTTON.addEventListener("click", onSwitchClickEvent);
+  SWITCH_BUTTON.innerHTML = PLAYER_IS(playerClass);
 
   //Hide the End-Screen
   WIN_SCREEN.classList.add("hide");
 
   setInfoText(TURN_MSG(PLAYER1_CLASS));
-  console.log(findBestMove(gameState));
+  //Let the X-AI to his move.
+  if (aiSideClass === getCurrentTurnClass()) playAI(gameState);
 }
 
 /**
@@ -92,15 +113,38 @@ function onCellClickEvent(oEvent) {
   const cell = oEvent.target;
   const idx = [].indexOf.call(CELLS, cell);
   const [row, col] = idxToColAndRow(idx);
-  const currentPlayer = getCurrentTurnClass();
-  placeMark(gameState, row, col, currentPlayer, cell);
-  if (checkForWin(gameState, currentPlayer)) {
+  const currentPlayerClass = getCurrentTurnClass();
+  if (isCellEmpty(gameState, row, col))
+    doMove(gameState, row, col, currentPlayerClass, cell);
+}
+
+/**
+ * Switch the sides.
+ * @param {Object} oEvent
+ */
+function onSwitchClickEvent(oEvent) {
+  playerClass = getOpponentClass(playerClass);
+  aiSideClass = getOpponentClass(playerClass);
+  startGame();
+}
+
+/**
+ * Function to do a Move.
+ * @param {Array[][]} board The current board
+ * @param {*} row The row, in which a mark should be placed
+ * @param {*} col The column, in which a mark should be placed
+ * @param {*} currentPlayerClass The class for the mark.
+ * @param {*} target The target-cell.
+ */
+function doMove(board, row, col, currentPlayerClass, target) {
+  placeMark(board, row, col, currentPlayerClass, target);
+  if (checkForWin(gameState, currentPlayerClass)) {
     endGame(false);
   } else if (checkForDraw(gameState)) {
     endGame(true);
   } else {
-    swapTurn();
-    setInfoText(TURN_MSG(getOpponentClass(currentPlayer)));
+    setInfoText(TURN_MSG(getOpponentClass(currentPlayerClass)));
+    swapTurn(gameState);
   }
 }
 
@@ -117,16 +161,16 @@ function onResetClickEvent(oEvent) {
  * @param {Array[][]} board The current Board.
  * @param {*} row  The Row in which the new Mark should be placed.
  * @param {*} col  The Column in which the new Mark should be placed.
- * @param {*} currentPlayer The Class of the Current Player.
+ * @param {*} currentPlayerClass The Class of the Current Player.
  * @param {*} target The target HTMl-Object.
  */
-function placeMark(board, row, col, currentPlayer, target) {
-  board[row][col] = currentPlayer;
-  target.classList.add(currentPlayer);
+function placeMark(board, row, col, currentPlayerClass, target) {
+  board[row][col] = currentPlayerClass;
+  target.classList.add(currentPlayerClass);
 }
 
 /**
- * Returns the class of the player based on the variable {@link player1Turn}.
+ * Returns the class of the playerClass based on the variable {@link player1Turn}.
  * @returns Either {@link PLAYER1_CLASS} or {@link PLAYER2_CLASS}
  */
 function getCurrentTurnClass() {
@@ -169,7 +213,7 @@ function endGame(isDraw) {
  * @returns {Array} arr[0] = row, arr[1] = col
  */
 function idxToColAndRow(idx) {
-  return [Math.floor(idx / 3), idx % 3];
+  return [Math.floor(idx / amountOfRowAndCols), idx % amountOfRowAndCols];
 }
 
 /**
@@ -216,24 +260,38 @@ function checkForDraw(board) {
 /**
  * Changes the Turns. (Manipulates the variable {@link player1Turn})
  */
-function swapTurn() {
+function swapTurn(board) {
   player1Turn = !player1Turn;
+  if (getCurrentTurnClass() === aiSideClass) playAI(board);
+}
+
+/**
+ * Let the AI do his turn.
+ */
+function playAI(board) {
+  let move = findBestMove(gameState);
+  doMove(
+    board,
+    move.row,
+    move.col,
+    aiSideClass,
+    CELLS[move.col + move.row * amountOfRowAndCols]
+  );
 }
 
 /**
  * The static evaluation of the current board state.
- * +10 if Player1 would win.
- * -10 if Player2 would win.
- * In every other case 0;
+ * +50 if {@link PLAYER1_CLASS} and -50 if {@link PLAYER2_CLASS} would win.
+ * We reduce the scores by the amount of the depth, so that the AI chooses the faster way to victory if there are multiple ways.
  * @param {Array[][]} board
  * @param {number} depth
  * @returns The state described above.
  */
 function staticEval(board, depth) {
   if (checkForWin(board, PLAYER1_CLASS)) {
-    return +10 - depth;
+    return 15 + depth;
   } else if (checkForWin(board, PLAYER2_CLASS)) {
-    return -10 + depth;
+    return -15 - depth;
   }
   return 0;
 }
@@ -255,8 +313,8 @@ function isCellEmpty(board, row, col) {
  */
 function possibleMoves(board) {
   let moves = [];
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
+  for (let i = 0; i < amountOfRowAndCols; i++) {
+    for (let j = 0; j < amountOfRowAndCols; j++) {
       if (isCellEmpty(board, i, j)) {
         moves.push(new Move(i, j));
       }
@@ -265,21 +323,99 @@ function possibleMoves(board) {
   return moves;
 }
 
+/**
+ * Implementation of the minimax algorithm with alpha-beta pruning.
+ * {@link PLAYER1_CLASS} is trying to maximize and {@link PLAYER2_CLASS} to minimize his score.
+ * @param {Array[][]} board The current Board
+ * @param {*} depth The current Depth in the tree. If 0 we break.
+ * @param {*} alpha The minimum score that the maximizing playerClass is assured.
+ * @param {*} beta The maximum score that the minimizing playerClass is assured.
+ * @param {*} maximizingPlayer Maximizing or minimizing playerClass
+ * @returns
+ */
 function minimax(board, depth, alpha, beta, maximizingPlayer) {
-  return 1;
+  let boardVal = staticEval(board, depth);
+  //Return the static Evaluation of the Board if we reached the maximum depth or the GameOver is over.
+  if (Math.abs(boardVal) > 0 || depth == 0 || isGameOver(board))
+    return boardVal;
+
+  if (maximizingPlayer) {
+    //Worst value for the maximizing playerClass
+    let maxEval = -Infinity;
+
+    for (let move of possibleMoves(board)) {
+      //Do the move
+      board[move.row][move.col] = PLAYER1_CLASS;
+      //Recursive call to switch the playerClass.
+      let eval = minimax(board, depth - 1, alpha, beta, false);
+      //Undo the move
+      board[move.row][move.col] = "";
+
+      //Update the values
+      maxEval = Math.max(maxEval, eval);
+      alpha = Math.max(alpha, eval);
+      //Prune if there is already a better solution for the minimizing playerClass.
+      if (beta <= alpha) break;
+    }
+
+    return maxEval;
+  } else {
+    //Worst value for the minimizing playerClass
+    let minEval = Infinity;
+
+    for (let move of possibleMoves(board)) {
+      //Do the move
+      board[move.row][move.col] = PLAYER2_CLASS;
+      //Recursive call to switch the playerClass.
+      let eval = minimax(board, depth - 1, alpha, beta, true);
+      //Undo the move
+      board[move.row][move.col] = "";
+
+      //Update the values
+      minEval = Math.min(minEval, eval);
+      beta = Math.min(beta, eval);
+
+      //Prune if there is already a better solution for the maximizing playerClass.
+      if (beta <= alpha) break;
+    }
+
+    return minEval;
+  }
 }
 
+/**
+ * Function, which finds the best move for an AI using the minmax-Algorithm.
+ * @param {Array[][]} board
+ * @returns A Move-Object with the best move.
+ */
 function findBestMove(board) {
   let bestMove = new Move(-1, -1);
-  let bestValue = -Infinity;
-  for (let move of possibleMoves(board)) {
-    board[move.row][move.col] = PLAYER2_CLASS;
-    let eval = minimax(board, MAX_DEPTH, -Infinity, Infinity, false);
-    board[move.row][move.col] = "";
-    if (eval > bestValue) {
-      bestMove.row = move.row;
-      bestMove.col = move.col;
-      bestValue = eval;
+  let bestValue = aiSideClass === PLAYER2_CLASS ? Infinity : -Infinity;
+  let possible = possibleMoves(board);
+  if (possible.length === 9) {
+    let col = Math.floor(Math.random() * amountOfRowAndCols);
+    let row = Math.floor(Math.random() * amountOfRowAndCols);
+    bestMove.col = col;
+    bestMove.row = row;
+  } else {
+    for (let move of possible) {
+      board[move.row][move.col] = aiSideClass;
+      let eval = minimax(
+        board,
+        MAX_DEPTH,
+        -Infinity,
+        Infinity,
+        aiSideClass === PLAYER2_CLASS
+      );
+      board[move.row][move.col] = "";
+      if (
+        (aiSideClass === PLAYER2_CLASS && eval < bestValue) ||
+        (aiSideClass !== PLAYER2_CLASS && eval > bestValue)
+      ) {
+        bestMove.row = move.row;
+        bestMove.col = move.col;
+        bestValue = eval;
+      }
     }
   }
   return bestMove;

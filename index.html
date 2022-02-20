@@ -6,8 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="script.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
+    <main class="background">
+        <section class="title">
+            <h1>Tic Tac Toe</h1>
+        </section>
+        <section class="display">
+            Player <span class="display-player">X</span>'s turn
+        </section>
+        <section class="board x">
+            <div class="cell o"></div>
+            <div class="cell x"></div>
+            <div class="cell "></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+        </section>
+        <section class="controls">
+            <button id="reset">Reset</button>
+        </section>
+        <div class="screen hide">
+            <div class="message">This is a Test.</div>
+            <button>Restart</button>
+        </div>
+    </main>
 </body>
 </html>

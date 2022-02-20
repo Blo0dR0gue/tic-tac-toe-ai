@@ -26,6 +26,8 @@ const WINNING_MSG = (currentPlayer) => `Player ${currentPlayer} has won!`;
 const DRAW_MSG = `It's a Draw!`;
 const TURN_MSG = (currentPlayer) => `It's ${currentPlayer}'s turn!`;
 
+const MAX_DEPTH = 12;
+
 //All possible winning conditions for each player.
 const WIN_COMBINATIONS = [
   [0, 1, 2],
@@ -78,6 +80,7 @@ function startGame() {
   WIN_SCREEN.classList.add("hide");
 
   setInfoText(TURN_MSG(PLAYER1_CLASS));
+  console.log(findBestMove(gameState));
 }
 
 /**
@@ -223,13 +226,14 @@ function swapTurn() {
  * -10 if Player2 would win.
  * In every other case 0;
  * @param {Array[][]} board
+ * @param {number} depth
  * @returns The state described above.
  */
-function staticEval(board) {
+function staticEval(board, depth) {
   if (checkForWin(board, PLAYER1_CLASS)) {
-    return +10;
+    return +10 - depth;
   } else if (checkForWin(board, PLAYER2_CLASS)) {
-    return -10;
+    return -10 + depth;
   }
   return 0;
 }

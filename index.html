@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <script src="script.js"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <main class="background">
-        <section class="title">
-            <h1>Tic Tac Toe</h1>
-        </section>
-        <section class="display">
-            Player <span class="display-player">X</span>'s turn
-        </section>
-        <section class="board x">
-            <div class="cell o"></div>
-            <div class="cell x"></div>
-            <div class="cell "></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-        </section>
-        <section class="controls">
-            <button id="reset">Reset</button>
-        </section>
-        <div class="screen hide">
-            <div class="message">This is a Test.</div>
-            <button>Restart</button>
-        </div>
+      <section class="title">
+        <h1>Tic Tac Toe</h1>
+      </section>
+      <section class="display">
+        Player <span class="display-player">X</span>'s turn
+      </section>
+      <div id="board" class="board x">
+        <div class="cell o" data-cell></div>
+        <div class="cell x"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+      </div>
+      <section class="controls">
+        <button id="reset">Reset</button>
+      </section>
+      <div id="screen" class="screen hide">
+        <div id="screen-msg" class="message"></div>
+        <button id="restart">Restart</button>
+      </div>
     </main>
-</body>
+  </body>
 </html>

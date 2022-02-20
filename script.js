@@ -216,3 +216,67 @@ function checkForDraw(board) {
 function swapTurn() {
   player1Turn = !player1Turn;
 }
+
+/**
+ * The static evaluation of the current board state.
+ * +10 if Player1 would win.
+ * -10 if Player2 would win.
+ * In every other case 0;
+ * @param {Array[][]} board
+ * @returns The state described above.
+ */
+function staticEval(board) {
+  if (checkForWin(board, PLAYER1_CLASS)) {
+    return +10;
+  } else if (checkForWin(board, PLAYER2_CLASS)) {
+    return -10;
+  }
+  return 0;
+}
+
+/**
+ * Checks if the Cell at this coords is empty or not.
+ * @param {Array[][]} board
+ * @param {number} row
+ * @param {number} col
+ * @returns true if the cell is empty.
+ */
+function isCellEmpty(board, row, col) {
+  return board[row][col] === "";
+}
+/**
+ * Returns all possible moves in an array.
+ * @param {Array[]} board
+ * @returns An array with possible {@link Move}-Objects.
+ */
+function possibleMoves(board) {
+  let moves = [];
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (isCellEmpty(board, i, j)) {
+        moves.push(new Move(i, j));
+      }
+    }
+  }
+  return moves;
+}
+
+function minimax(board, depth, alpha, beta, maximizingPlayer) {
+  return 1;
+}
+
+function findBestMove(board) {
+  let bestMove = new Move(-1, -1);
+  let bestValue = -Infinity;
+  for (let move of possibleMoves(board)) {
+    board[move.row][move.col] = PLAYER2_CLASS;
+    let eval = minimax(board, MAX_DEPTH, -Infinity, Infinity, false);
+    board[move.row][move.col] = "";
+    if (eval > bestValue) {
+      bestMove.row = move.row;
+      bestMove.col = move.col;
+      bestValue = eval;
+    }
+  }
+  return bestMove;
+}

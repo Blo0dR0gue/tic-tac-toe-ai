@@ -14,10 +14,10 @@
         <h1>Tic Tac Toe</h1>
       </section>
       <section class="display">
-        Player <span class="display-player">X</span>'s turn
+        <div id="info" class="info-msg"></div>
       </section>
       <div id="board" class="board x">
-        <div class="cell o" data-cell></div>
+        <div class="cell o"></div>
         <div class="cell x"></div>
         <div class="cell"></div>
         <div class="cell"></div>
@@ -30,7 +30,7 @@
       <section class="controls">
         <button id="reset">Reset</button>
       </section>
-      <div id="screen" class="screen hide">
+      <div id="screen" class="screen">
         <div id="screen-msg" class="message"></div>
         <button id="restart">Restart</button>
       </div>

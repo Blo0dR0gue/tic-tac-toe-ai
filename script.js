@@ -40,7 +40,7 @@ const PLAYER_IS = (playerClass) => `You are ${playerClass}!`;
 const MAX_DEPTH = 12;
 
 //All possible winning conditions for each playerClass.
-const WIN_COMBINATIONS = [
+const WIN_COMBINATIONS = [  //TODO Grid das übernehmen lassen (Element in cell z.B.)
   [0, 1, 2],
   [3, 4, 5],
   [6, 7, 8],

@@ -1,5 +1,6 @@
+import Grid from "./Grid.js"
+//import Ai from "./Ai.js"  //TODO
 //TODO: expand to 4by4 field
-//TODO: cleanup (split in multiple files)
 
 /**
  * A Object, which holds the row and column of a new Move
@@ -16,7 +17,6 @@ const PLAYER1_CLASS = "x";
 const PLAYER2_CLASS = "o";
 
 //Needed HTML-Elements
-const CELLS = document.querySelectorAll(".cell");
 const BOARD_DIV = document.getElementById("board");
 const WIN_SCREEN = document.getElementById("screen");
 const WIN_SCREEN_MSG = document.getElementById("screen-msg");
@@ -24,6 +24,9 @@ const RESET_BUTTON = document.getElementById("reset");
 const RESTART_BUTTON = document.getElementById("restart");
 const INFO_CONTAINER = document.getElementById("info");
 const SWITCH_BUTTON = document.getElementById("switch");
+
+const GRID = new Grid(BOARD_DIV)
+const CELLS = GRID.cells;
 
 let playerClass = PLAYER1_CLASS;
 
@@ -69,10 +72,10 @@ function startGame() {
   player1Turn = true;
   //Reset Cells
   CELLS.forEach((cell) => {
-    cell.classList.remove(PLAYER1_CLASS);
-    cell.classList.remove(PLAYER2_CLASS);
-    cell.removeEventListener("click", onCellClickEvent);
-    cell.addEventListener("click", onCellClickEvent, { once: true });
+    cell.cellElement.classList.remove(PLAYER1_CLASS);
+    cell.cellElement.classList.remove(PLAYER2_CLASS);
+    cell.cellElement.removeEventListener("click", onCellClickEvent);
+    cell.cellElement.addEventListener("click", onCellClickEvent, { once: true });
   });
 
   gameState = [];
@@ -110,12 +113,13 @@ function startGame() {
  * @param {Object} oEvent An Event-Object
  */
 function onCellClickEvent(oEvent) {
-  const cell = oEvent.target;
-  const idx = [].indexOf.call(CELLS, cell);
-  const [row, col] = idxToColAndRow(idx);
+  const cellElement = oEvent.currentTarget;
+  const cell = GRID.getCellByElement(cellElement);
+  const row = cell.y;
+  const col = cell.x;
   const currentPlayerClass = getCurrentTurnClass();
   if (isCellEmpty(gameState, row, col))
-    doMove(gameState, row, col, currentPlayerClass, cell);
+    doMove(gameState, row, col, currentPlayerClass, cell.cellElement);
 }
 
 /**
@@ -275,7 +279,7 @@ function playAI(board) {
     move.row,
     move.col,
     aiSideClass,
-    CELLS[move.col + move.row * amountOfRowAndCols]
+    CELLS[move.col + move.row * amountOfRowAndCols].cellElement
   );
 }
 
@@ -347,13 +351,13 @@ function minimax(board, depth, alpha, beta, maximizingPlayer) {
       //Do the move
       board[move.row][move.col] = PLAYER1_CLASS;
       //Recursive call to switch the playerClass.
-      let eval = minimax(board, depth - 1, alpha, beta, false);
+      let evaluation = minimax(board, depth - 1, alpha, beta, false);
       //Undo the move
       board[move.row][move.col] = "";
 
       //Update the values
-      maxEval = Math.max(maxEval, eval);
-      alpha = Math.max(alpha, eval);
+      maxEval = Math.max(maxEval, evaluation);
+      alpha = Math.max(alpha, evaluation);
       //Prune if there is already a better solution for the minimizing playerClass.
       if (beta <= alpha) break;
     }
@@ -367,13 +371,13 @@ function minimax(board, depth, alpha, beta, maximizingPlayer) {
       //Do the move
       board[move.row][move.col] = PLAYER2_CLASS;
       //Recursive call to switch the playerClass.
-      let eval = minimax(board, depth - 1, alpha, beta, true);
+      let evaluation = minimax(board, depth - 1, alpha, beta, true);
       //Undo the move
       board[move.row][move.col] = "";
 
       //Update the values
-      minEval = Math.min(minEval, eval);
-      beta = Math.min(beta, eval);
+      minEval = Math.min(minEval, evaluation);
+      beta = Math.min(beta, evaluation);
 
       //Prune if there is already a better solution for the maximizing playerClass.
       if (beta <= alpha) break;
@@ -400,7 +404,7 @@ function findBestMove(board) {
   } else {
     for (let move of possible) {
       board[move.row][move.col] = aiSideClass;
-      let eval = minimax(
+      let evaluation = minimax(
         board,
         MAX_DEPTH,
         -Infinity,
@@ -409,12 +413,12 @@ function findBestMove(board) {
       );
       board[move.row][move.col] = "";
       if (
-        (aiSideClass === PLAYER2_CLASS && eval < bestValue) ||
-        (aiSideClass !== PLAYER2_CLASS && eval > bestValue)
+        (aiSideClass === PLAYER2_CLASS && evaluation < bestValue) ||
+        (aiSideClass !== PLAYER2_CLASS && evaluation > bestValue)
       ) {
         bestMove.row = move.row;
         bestMove.col = move.col;
-        bestValue = eval;
+        bestValue = evaluation;
       }
     }
   }

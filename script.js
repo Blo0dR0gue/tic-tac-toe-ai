@@ -1,4 +1,4 @@
-import Grid from "./Grid.js"
+import Grid from "./Grid.js";
 //import Ai from "./Ai.js"  //TODO
 //TODO: expand to 4by4 field
 
@@ -293,9 +293,9 @@ function playAI(board) {
  */
 function staticEval(board, depth) {
   if (checkForWin(board, PLAYER1_CLASS)) {
-    return 15 + depth;
+    return 50 - depth;
   } else if (checkForWin(board, PLAYER2_CLASS)) {
-    return -15 - depth;
+    return -50 + depth;
   }
   return 0;
 }
